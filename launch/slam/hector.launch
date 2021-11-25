@@ -8,9 +8,8 @@ E-mail: kint.zhao@slamtec.com
 
   <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="1 0 0 0 0 0 base_link laser 100" /> <!--change -->
 
-
-    <node pkg="hector_mapping" type="hector_mapping" name="hector_height_mapping" output="screen">
-      <param name="scan_topic" value="scan" />
+  <node pkg="hector_mapping" type="hector_mapping" name="hector_height_mapping" output="screen">
+    <param name="scan_topic" value="scan" />
     <param name="base_frame" value="base_link" />
     <param name="odom_frame" value="base_link" />
 
@@ -31,9 +30,6 @@ E-mail: kint.zhao@slamtec.com
     <param name="map_size" value="1024"/>
     <param name="map_start_x" value="0.5"/>
     <param name="map_start_y" value="0.5"/>
-
   </node>
-
-
 
 </launch>
