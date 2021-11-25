@@ -23,7 +23,7 @@
 
 
     <!-- base control node -->
-    <node name="base_control"   pkg="base_control"  type="base_control.py" output="screen">
+    <node name="base_control"   pkg="ros_navigation"  type="base_control.py" output="screen">
             <param name="baudrate"   value="115200"/>  
             <param name="port"  value='/dev/move_base'/>
 

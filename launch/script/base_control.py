@@ -77,7 +77,7 @@ class queue:
 
     def show_queue(self):
         for i in range(self.capacity):
-            print self.array[i],
+            print(self.array[i])
         print(' ')
 
 #class BaseControl is design for hardware base relative control
