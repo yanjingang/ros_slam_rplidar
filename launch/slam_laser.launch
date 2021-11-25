@@ -8,7 +8,7 @@
   <arg name="planner"  default="" doc="opt: dwa, teb"/>
 
   <!-- base control -->
-  <include file="$(find base_control)/launch/base_control.launch" />
+  <include file="$(find ros_navigation)/launch/base_control.launch" />
 
   <!-- robot with lidar -->
   <include file="$(find ros_navigation)/launch/lidar.launch" />
