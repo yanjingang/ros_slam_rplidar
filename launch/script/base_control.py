@@ -145,7 +145,7 @@ class BaseControl:
 
         # Serial Communication
         try:
-            self.serial = serial.Serial(self.device_port,self.baudrate,timeout=10)
+            self.serial = serial.Serial(self.device_port, self.baudrate, timeout=10)
             rospy.loginfo("Opening Serial")
             try:
                 if self.serial.in_waiting:
