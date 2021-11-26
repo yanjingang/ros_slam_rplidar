@@ -240,7 +240,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Vel Command Send Faild")
+            rospy.logerr("Vel_cmd Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
     #Subscribe ackermann Cmd call this to send vel cmd to move base
     def ackermannCmdCB(self,data):
@@ -267,7 +267,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Vel Command Send Faild")
+            rospy.logerr("ackermann Vel Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
     #Communication Timer callback to handle receive data
     #depend on communication protocol
@@ -393,7 +393,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Get Version Command Send Faild")
+            rospy.logerr("Get Version Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0 
     #get move base SN
     def getSN(self):
@@ -407,7 +407,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Get SN Command Send Faild")
+            rospy.logerr("Get SN Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0  
     #get move base info
     def getInfo(self):
@@ -421,7 +421,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Get info Command Send Faild")
+            rospy.logerr("Get info Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0               
     #Odom Timer call this to get velocity and imu info and convert to odom topic
     def timerOdomCB(self,event):
@@ -440,7 +440,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Odom Command Send Faild")
+            rospy.logerr("Odom Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0   
         #calculate odom data
         Vx = float(ctypes.c_int16(self.Vx).value/1000.0)
@@ -484,7 +484,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Battery Command Send Faild")
+            rospy.logerr("Battery Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
         msg = BatteryState()
         msg.header.stamp = self.current_time
@@ -503,7 +503,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Sonar Command Send Faild")
+            rospy.logerr("Sonar Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
         msg = Range()
         msg.header.stamp = self.current_time
@@ -574,7 +574,7 @@ class BaseControl:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Imu Command Send Faild")
+            rospy.logerr("Imu Command Send Faild! output: " + output)
 
         self.serialIDLE_flag = 0
         msg = Imu()
