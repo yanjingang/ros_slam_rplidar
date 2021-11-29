@@ -241,7 +241,7 @@ class BaseControl:
                     data = (int(reading[i].encode('hex'), 16))
                     rospy.loginfo("get timerCommunication info:" + data)
         else:
-            rospy.loginfo("timerCommunication is Empty!")
+            #rospy.loginfo("timerCommunication is Empty!")
             pass
         
 
