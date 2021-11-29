@@ -237,9 +237,9 @@ class BaseControl:
         if length:
             reading = self.serial.read_all()
             if len(reading) != 0:
-                for i in range(0, len(reading)):
-                    data = (int(reading[i].encode('hex'), 16))
-                    rospy.loginfo("get timerCommunication info:" + str(data))
+                #for i in range(0, len(reading)):
+                #    data = (int(reading[i].encode('hex'), 16))
+                rospy.loginfo("get timerCommunication info:" + str(reading))
         else:
             #rospy.loginfo("timerCommunication is Empty!")
             pass
