@@ -49,7 +49,7 @@ if __name__=="__main__":
     rospy.loginfo("ROS Serial Python Node")
 
     port_name = rospy.get_param('~port','/dev/ttyACM0')
-    baud = int(rospy.get_param('~baud','57600'))
+    baud = int(rospy.get_param('~baudrate','57600'))
 
     # for systems where pyserial yields errors in the fcntl.ioctl(self.fd, TIOCMBIS, \
     # TIOCM_DTR_str) line, which causes an IOError, when using simulated port

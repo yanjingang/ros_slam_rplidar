@@ -22,6 +22,7 @@ import time
 import sys
 import math
 import string
+import traceback
 import serial
 from rosserial_python import SerialClient, RosSerialServer
 from serial import SerialException
@@ -145,6 +146,7 @@ class BaseControl:
                     self.serial.readall()
             except:
                 rospy.logerr("Opening Serial Try Faild")
+                traceback.print_exc()
                 pass
         except:
             rospy.logerr("Can not open Serial" + self.device_port)

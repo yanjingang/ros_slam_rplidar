@@ -23,6 +23,7 @@ import sys
 import math
 import serial
 import string
+import traceback
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState
@@ -154,6 +155,7 @@ class BaseControl:
                     self.serial.readall()
             except:
                 rospy.logerr("Opening Serial Try Faild")
+                traceback.print_exc()
                 pass
         except:
             rospy.logerr("Can not open Serial"+self.device_port)
@@ -199,7 +201,7 @@ class BaseControl:
         if(self.pub_imu):
             self.timer_imu = rospy.Timer(rospy.Duration(1.0/self.imu_freq), self.timerIMUCB)
             self.imu_pub = rospy.Publisher(self.imu_topic, Imu, queue_size=10)
-        """
+        
         # 获取底盘硬件及固件版本
         self.getVersion()
         # move base imu initialization need about 2s,during initialization,move base system is blocked
@@ -210,6 +212,7 @@ class BaseControl:
         time.sleep(0.01)
         # 获取底盘信息
         self.getInfo()
+        """
 
     
     # CRC-8 Calculate
