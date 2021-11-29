@@ -21,8 +21,10 @@ import tf
 import time
 import sys
 import math
-import serial
 import string
+import serial
+from rosserial_python import SerialClient, RosSerialServer
+from serial import SerialException
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState
@@ -151,12 +153,12 @@ class BaseControl:
         """
         rospy.loginfo("Connecting to %s at %d ..." % (self.device_port, self.baudrate) )
         try:
-            client = rosserial_python.SerialClient(self.device_port, self.baudrate, fix_pyserial_for_test=fix_pyserial_for_test)
+            client = SerialClient(self.device_port, self.baudrate, fix_pyserial_for_test=fix_pyserial_for_test)
             client.run()
         except KeyboardInterrupt:
             rospy.logerr("Opening Serial Try Faild")
             sys.exit(0)
-        except serial.SerialException:
+        except SerialException:
             rospy.logerr("Can not open Serial"+self.device_port)
             sys.exit(0)
         except OSError:
