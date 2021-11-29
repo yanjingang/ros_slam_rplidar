@@ -17,7 +17,7 @@ E-mail: kint.zhao@slamtec.com
     <param name="odom_frame" value="odom"/>
     <param name="map_update_interval" value="25"/>
     <param name="resolution" value="0.025"/>
-    <rosparam command="load" file="$(find ros_navigation)/launch/slam/karto_mapper_params.yaml" />
+    <rosparam command="load" file="$(find ros_slam_rplidar)/launch/slam/karto_mapper_params.yaml" />
   </node>
 
 </launch>
