@@ -80,8 +80,8 @@ if __name__=="__main__":
                 process.terminate()
                 process.join()
             rospy.loginfo("All done")
-
     else :"""
+    
     # Use serial port
     while not rospy.is_shutdown():
         rospy.loginfo("Connecting to %s at %d baud..." % (port_name,baud) )

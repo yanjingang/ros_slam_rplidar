@@ -152,32 +152,17 @@ class BaseControl:
             rospy.logerr("Can not open Serial" + self.device_port)
             self.serial.close
             sys.exit(0)
-        """
-        rospy.loginfo("Connecting to %s at %d ..." % (self.device_port, self.baudrate) )
-        try:
-            client = SerialClient(self.device_port, self.baudrate, fix_pyserial_for_test=False)
-            client.run()
-        except KeyboardInterrupt:
-            rospy.logerr("Opening Serial Try Faild")
-            sys.exit(0)
-        except SerialException:
-            rospy.logerr("Can not open Serial {} {}".format(self.device_port, self.baudrate))
-            sys.exit(0)
-        except OSError:
-            rospy.logerr("Can not open Serial {} {}".format(self.device_port, self.baudrate))
-            sys.exit(0)
-        """
         rospy.loginfo("Serial Open Succeed")
 
 
         self.tf_broadcaster = tf.TransformBroadcaster()
-        # test sub
+        # test rospy sub
         self.sub = rospy.Subscriber("/tank/data", String, self.subTankCmd, queue_size=10)
-        # test pub
-        #self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)
-        #self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.timerPubOdom)
-        # test serial
-        self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.timerCommunication)
+        # test rospy pub
+        self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)
+        self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.timerPubOdom)
+        # test 串口通讯（非topic、rosserial，这里是裸串口信息的监听）
+        #self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.timerCommunication)
 
 
         """

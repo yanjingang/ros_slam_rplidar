@@ -33,7 +33,7 @@
     </node>
 
     <!-- base control node -->
-    <node name="base_control" pkg="ros_navigation" type="test.py" output="screen">
+    <node name="base_control" pkg="ros_navigation" type="base_control.py" output="screen">
         <param name="port" value='$(arg port)' />
         <param name="baudrate" value="$(arg baudrate)" />
 

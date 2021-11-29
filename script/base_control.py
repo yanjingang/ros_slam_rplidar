@@ -96,6 +96,7 @@ class BaseControl:
         self.battery_topic = rospy.get_param('~battery_topic', 'battery')
         self.battery_freq = float(rospy.get_param('~battery_freq', '1'))
         self.cmd_vel_topic = rospy.get_param('~cmd_vel_topic', '/cmd_vel')
+
         """
         self.ackermann_cmd_topic = rospy.get_param('~ackermann_cmd_topic', '/ackermann_cmd_topic')
 
@@ -128,24 +129,35 @@ class BaseControl:
         self.BatteryFlag = False
         self.OdomTimeCounter = 0
         self.BatteryTimeCounter = 0
+        # 底盘裸串口通信的数据积累队列（串口数据需要拼接）
         self.Circleloop = queue(capacity=1024*4)
+        # 定位信息
         self.Vx = 0
         self.Vy = 0
         self.Vyaw = 0
         self.Yawz = 0
-        self.Vvoltage = 0
-        self.Icurrent = 0
+        # 电量默认值
+        self.Vvoltage = 1000
+        self.Icurrent = 1000 
+        # IMU数据
         self.Gyro = [0, 0, 0]
         self.Accel = [0, 0, 0]
         self.Quat = [0, 0, 0, 0]
+        # 声纳数据
         self.Sonar = [0, 0, 0, 0]
+        # 底盘固件版本
         self.movebase_firmware_version = [0, 0, 0]
+        # 底盘硬件版本
         self.movebase_hardware_version = [0, 0, 0]
-        self.movebase_type = ["NanoCar", "NanoRobot", "4WD_OMNI", "4WD"]
+        # 底盘类型
+        #self.movebase_type = ["NanoCar", "NanoRobot", "4WD_OMNI", "4WD"]
+        # 底盘马达类型
         self.motor_type = ["25GA370", "37GB520"]
+        # 末次指令时间
         self.last_cmd_vel_time = rospy.Time.now()
         self.last_ackermann_cmd_time = rospy.Time.now()
 
+        
         # 连接底盘serial串口 Serial Communication
         try:
             self.serial = serial.Serial(self.device_port, self.baudrate, timeout=10)
@@ -162,6 +174,10 @@ class BaseControl:
             self.serial.close
             sys.exit(0)
         rospy.loginfo("Serial Open Succeed")
+        # 底盘数据监听（裸串口方式）
+        #self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunicationTest)
+        self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunication)
+        
 
         # if move base type is ackermann car like robot and use ackermann msg ,sud ackermann topic,else sub cmd_vel topic
         """
@@ -170,13 +186,19 @@ class BaseControl:
             self.sub = rospy.Subscriber(self.ackermann_cmd_topic, AckermannDriveStamped, self.ackermannCmdCB, queue_size=20)
         else:
         """
+        
         self.tf_broadcaster = tf.TransformBroadcaster()
+        # test rospy sub
+        self.sub = rospy.Subscriber("/tank/data", String, self.subTankData, queue_size=10)
         # 监听move_base发布给底盘的移动命令，并发送给底盘串口执行
-        self.sub = rospy.Subscriber(self.cmd_vel_topic, Twist, self.cmdCB, queue_size=20)
-        # 里程计数据发布对象
-        self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)
-        # 电量数据发布对象
-        self.battery_pub = rospy.Publisher(self.battery_topic, BatteryState, queue_size=3)
+        self.sub = rospy.Subscriber(self.cmd_vel_topic, Twist, self.subCmd, queue_size=20)
+        # 定频发布里程计数据
+        self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)    #里程计数据发布对象
+        self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.pubOdom)
+        # 定频发布电量数据
+        self.battery_pub = rospy.Publisher(self.battery_topic, BatteryState, queue_size=3)  #电量数据发布对象
+        self.timer_battery = rospy.Timer(rospy.Duration(1.0/self.battery_freq), self.pubBattery)
+
         """
         if self.pub_sonar:
             if sonar_num > 0:
@@ -188,15 +210,7 @@ class BaseControl:
                 self.range_pub3 = rospy.Publisher('sonar_3', Range, queue_size=3)
             if sonar_num > 3:
                 self.range_pub4 = rospy.Publisher('sonar_4', Range, queue_size=3)
-        """
-        # 定频发布里程计数据
-        self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.timerOdomCB)
-        # 定频发布电量数据
-        self.timer_battery = rospy.Timer(rospy.Duration(1.0/self.battery_freq), self.timerBatteryCB)
-        # 定频通信
-        self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.timerCommunicationCB)
 
-        """
         # inorder to compatibility old version firmware,imu topic is NOT pud in default
         if(self.pub_imu):
             self.timer_imu = rospy.Timer(rospy.Duration(1.0/self.imu_freq), self.timerIMUCB)
@@ -213,6 +227,23 @@ class BaseControl:
         # 获取底盘信息
         self.getInfo()
         """
+
+    # test sub data
+    def subTankData(self, data):
+        rospy.loginfo("sub /tank/data data: " + str(data))
+
+    # 底盘数据监听（裸串口方式）
+    def subSerialCommunicationTest(self, event):
+        length = self.serial.in_waiting
+        if length:
+            reading = self.serial.read_all()
+            if len(reading) != 0:
+                #for i in range(0, len(reading)):
+                #    data = (int(reading[i].encode('hex'), 16))
+                rospy.loginfo("get timerCommunication info:" + str(reading))
+        else:
+            #rospy.loginfo("timerCommunication is Empty!")
+            pass
 
     
     # CRC-8 Calculate
@@ -235,7 +266,7 @@ class BaseControl:
         return ret
 
     # 监听move_base发布给底盘的vel_cmd移动命令，并发送给底盘串口  Subscribe vel_cmd call this to send vel cmd to move base
-    def cmdCB(self, data):
+    def subCmd(self, data):
         self.trans_x = data.linear.x
         self.trans_y = data.linear.y
         self.rotat_z = data.angular.z
@@ -293,16 +324,15 @@ class BaseControl:
         except:
             rospy.logerr("ackermann Vel Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
-    """
 
-    # 通信计时器回调 Communication Timer callback to handle receive data
-    # depend on communication protocol
-    def timerCommunicationCB(self, event):
+    # 底盘数据监听（裸串口方式） Communication Timer callback to handle receive data. depend on communication protocol
+    def subSerialCommunication(self, event):
         length = self.serial.in_waiting
         if length:
             reading = self.serial.read_all()
             if len(reading) != 0:
                 for i in range(0, len(reading)):
+                    rospy.loginfo("get serial com data:" + str(reading))
                     data = (int(reading[i].encode('hex'), 16))
                     try:
                         self.Circleloop.enqueue(data)
@@ -462,9 +492,11 @@ class BaseControl:
         except:
             rospy.logerr("Get info Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
+    """
 
     # 定频获取速度和imu信息，转换后发布里程计数据 Odom Timer call this to get velocity and imu info and convert to odom topic
-    def timerOdomCB(self, event):
+    def pubOdom(self, event):
+        """
         # Get move base velocity data
         if self.movebase_firmware_version[1] == 0:
             # old version firmware have no version info and not support new command below
@@ -482,6 +514,7 @@ class BaseControl:
         except:
             rospy.logerr("Odom Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
+        """
         # calculate odom data
         Vx = float(ctypes.c_int16(self.Vx).value/1000.0)
         Vy = float(ctypes.c_int16(self.Vy).value/1000.0)
@@ -515,11 +548,11 @@ class BaseControl:
         msg.twist.twist.linear.y = Vy
         msg.twist.twist.angular.z = Vyaw
         self.pub.publish(msg)
-        self.tf_broadcaster.sendTransform(
-            (self.pose_x, self.pose_y, 0.0), pose_quat, self.current_time, self.baseId, self.odomId)
+        self.tf_broadcaster.sendTransform((self.pose_x, self.pose_y, 0.0), pose_quat, self.current_time, self.baseId, self.odomId)
 
     # 定频发布电量数据 Battery Timer callback function to get battery info
-    def timerBatteryCB(self, event):
+    def pubBattery(self, event):
+        """
         output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x07) + chr(0x00) + chr(0xe4)  # 0xe4 is CRC-8 value
         while(self.serialIDLE_flag):
             time.sleep(0.01)
@@ -531,6 +564,7 @@ class BaseControl:
         except:
             rospy.logerr("Battery Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
+        """
         msg = BatteryState()
         msg.header.stamp = self.current_time
         msg.header.frame_id = self.baseId
