@@ -2,29 +2,28 @@
   SLAM with lidar
  -->
 <launch>
-  <!-- Arguments -->
-  <arg name="slam_methods" default="hector" doc="slam type [gmapping, hector, karto, cartographer]"/>
-  <arg name="open_rviz" default="false"/>
-  <arg name="planner"  default="" doc="opt: dwa, teb"/>
+    <!-- Arguments -->
+    <arg name="slam_methods" default="hector" doc="slam type [gmapping, hector, karto, cartographer]" />
+    <arg name="open_rviz" default="false" />
+    <arg name="planner" default="" doc="opt: dwa, teb" />
 
-  <!-- base control -->
-  <include file="$(find ros_navigation)/launch/base_control.launch" />
+    <!-- base control -->
+    <include file="$(find ros_navigation)/launch/base_control.launch" />
 
-  <!-- robot with lidar -->
-  <include file="$(find ros_navigation)/launch/lidar.launch" />
+    <!-- robot with lidar -->
+    <include file="$(find ros_navigation)/launch/lidar.launch" />
 
-  <!-- SLAM: Gmapping, Cartographer, Hector, Karto -->
-  <include file="$(find ros_navigation)/launch/slam/$(arg slam_methods).launch" />
+    <!-- SLAM: Gmapping, Cartographer, Hector, Karto -->
+    <include file="$(find ros_navigation)/launch/slam/$(arg slam_methods).launch" />
 
-  <!-- move_base -->
-  <group unless="$(eval planner == '')">
-    <include file="$(find ros_navigation)/launch/move_base.launch" unless="$(eval planner == '')">
-    </include>
-  </group>
+    <!-- move_base -->
+    <group unless="$(eval planner == '')">
+        <include file="$(find ros_navigation)/launch/move_base.launch" unless="$(eval planner == '')"></include>
+    </group>
 
-  <!-- rviz -->
-  <group if="$(arg open_rviz)">
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ros_navigation)/rviz/slam.rviz" />
-  </group>
+    <!-- rviz -->
+    <group if="$(arg open_rviz)">
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ros_navigation)/rviz/slam.rviz" />
+    </group>
 
 </launch>

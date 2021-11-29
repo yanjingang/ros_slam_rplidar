@@ -1,0 +1,6 @@
+<!--
+  show navigation in rviz
+ -->
+<launch>
+    <node pkg="rviz" type="rviz" name="rviz" required="true" args="-d $(find ros_navigation)/rviz/navigation.rviz" />
+</launch>

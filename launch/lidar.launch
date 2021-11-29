@@ -4,10 +4,10 @@
 <launch>
     <!-- robot frame -->
     <arg name="base_frame" default="/base_footprint" />
-    <arg name="lidar_frame" default="laser" doc="lidar_frame[base_laser_link, laser]"/>  
+    <arg name="lidar_frame" default="laser" doc="lidar_frame[base_laser_link, laser]" />
 
     <include file="$(find ros_navigation)/launch/lidar/rplidar.launch">
-        <arg name="lidar_frame" value="$(arg lidar_frame)"/>
+        <arg name="lidar_frame" value="$(arg lidar_frame)" />
     </include>
 
     <!--node pkg="tf" type="static_transform_publisher" name="base_footprint_to_laser"
