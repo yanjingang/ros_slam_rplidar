@@ -246,25 +246,6 @@ class BaseControl:
             pass
 
     
-    # CRC-8 Calculate
-    def crc_1byte(self, data):
-        crc_1byte = 0
-        for i in range(0, 8):
-            if((crc_1byte ^ data) & 0x01):
-                crc_1byte ^= 0x18
-                crc_1byte >>= 1
-                crc_1byte |= 0x80
-            else:
-                crc_1byte >>= 1
-            data >>= 1
-        return crc_1byte
-
-    def crc_byte(self, data, length):
-        ret = 0
-        for i in range(length):
-            ret = self.crc_1byte(ret ^ data[i])
-        return ret
-
     # 监听move_base发布给底盘的vel_cmd移动命令，并发送给底盘串口(也可以底盘直接监听vel_cmd topic)  Subscribe vel_cmd call this to send vel cmd to move base
     def subCmd(self, data):
         self.trans_x = data.linear.x
@@ -299,34 +280,107 @@ class BaseControl:
         self.serialIDLE_flag = 0
         """
 
-    """
-    # Subscribe ackermann Cmd call this to send vel cmd to move base
-    def ackermannCmdCB(self, data):
-        self.speed = data.drive.speed
-        self.steering_angle = data.drive.steering_angle
-        self.last_ackermann_cmd_time = rospy.Time.now()
-        output = chr(0x5a) + chr(12) + chr(0x01) + chr(0x15) + \
-            chr((int(self.speed*1000.0) >> 8) & 0xff) + chr(int(self.speed*1000.0) & 0xff) + \
-            chr(0x00) + chr(0x00) + \
-            chr((int(self.steering_angle*1000.0) >> 8) & 0xff) + chr(int(self.steering_angle*1000.0) & 0xff) + \
-            chr(0x00)
-        outputdata = [0x5a, 0x0c, 0x01, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        outputdata[4] = (int(self.speed*1000.0) >> 8) & 0xff
-        outputdata[5] = int(self.speed*1000.0) & 0xff
-        outputdata[8] = (int(self.steering_angle*1000.0) >> 8) & 0xff
-        outputdata[9] = int(self.steering_angle*1000.0) & 0xff
-        crc_8 = self.crc_byte(outputdata, len(outputdata)-1)
-        output += chr(crc_8)
-        while self.serialIDLE_flag:
+    # 定频获取速度和imu信息，转换后发布里程计数据 Odom Timer call this to get velocity and imu info and convert to odom topic
+    def pubOdom(self, event):
+        """
+        # Get move base velocity data
+        if self.movebase_firmware_version[1] == 0:
+            # old version firmware have no version info and not support new command below
+            output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x09) + chr(0x00) + chr(0x38)  # 0x38 is CRC-8 value
+        else:
+            # in firmware version new than v1.1.0,support this command
+            output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x11) + chr(0x00) + chr(0xa2)
+        while(self.serialIDLE_flag):
             time.sleep(0.01)
-        self.serialIDLE_flag = 4
+        self.serialIDLE_flag = 1
         try:
             while self.serial.out_waiting:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("ackermann Vel Command Send Faild! output: " + output)
+            rospy.logerr("Odom Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
+        """
+        # calculate odom data
+        Vx = float(ctypes.c_int16(self.Vx).value/1000.0)
+        Vy = float(ctypes.c_int16(self.Vy).value/1000.0)
+        Vyaw = float(ctypes.c_int16(self.Vyaw).value/1000.0)
+
+        self.pose_yaw = float(ctypes.c_int16(self.Yawz).value/100.0)
+        self.pose_yaw = self.pose_yaw*math.pi/180.0
+
+        self.current_time = rospy.Time.now()
+        dt = (self.current_time - self.previous_time).to_sec()
+        self.previous_time = self.current_time
+        self.pose_x = self.pose_x + Vx * \
+            (math.cos(self.pose_yaw))*dt - Vy * (math.sin(self.pose_yaw))*dt
+        self.pose_y = self.pose_y + Vx * \
+            (math.sin(self.pose_yaw))*dt + Vy * (math.cos(self.pose_yaw))*dt
+
+        pose_quat = tf.transformations.quaternion_from_euler(
+            0, 0, self.pose_yaw)
+        msg = Odometry()
+        msg.header.stamp = self.current_time
+        msg.header.frame_id = self.odomId
+        msg.child_frame_id = self.baseId
+        msg.pose.pose.position.x = self.pose_x
+        msg.pose.pose.position.y = self.pose_y
+        msg.pose.pose.position.z = 0
+        msg.pose.pose.orientation.x = pose_quat[0]
+        msg.pose.pose.orientation.y = pose_quat[1]
+        msg.pose.pose.orientation.z = pose_quat[2]
+        msg.pose.pose.orientation.w = pose_quat[3]
+        msg.twist.twist.linear.x = Vx
+        msg.twist.twist.linear.y = Vy
+        msg.twist.twist.angular.z = Vyaw
+        self.pub.publish(msg)
+        self.tf_broadcaster.sendTransform((self.pose_x, self.pose_y, 0.0), pose_quat, self.current_time, self.baseId, self.odomId)
+        #rospy.loginfo("pub /odom data: " + str(msg))
+
+    # 定频发布电量数据 Battery Timer callback function to get battery info
+    def pubBattery(self, event):
+        """
+        output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x07) + chr(0x00) + chr(0xe4)  # 0xe4 is CRC-8 value
+        while(self.serialIDLE_flag):
+            time.sleep(0.01)
+        self.serialIDLE_flag = 3
+        try:
+            while self.serial.out_waiting:
+                pass
+            self.serial.write(output)
+        except:
+            rospy.logerr("Battery Command Send Faild! output: " + output)
+        self.serialIDLE_flag = 0
+        """
+        msg = BatteryState()
+        msg.header.stamp = self.current_time
+        msg.header.frame_id = self.baseId
+        msg.voltage = float(self.Vvoltage/1000.0)
+        msg.current = float(self.Icurrent/1000.0)
+        self.battery_pub.publish(msg)
+        #rospy.loginfo("pub /battery data: " + str(msg))
+
+    """
+
+    # CRC-8 Calculate
+    def crc_1byte(self, data):
+        crc_1byte = 0
+        for i in range(0, 8):
+            if((crc_1byte ^ data) & 0x01):
+                crc_1byte ^= 0x18
+                crc_1byte >>= 1
+                crc_1byte |= 0x80
+            else:
+                crc_1byte >>= 1
+            data >>= 1
+        return crc_1byte
+
+    def crc_byte(self, data, length):
+        ret = 0
+        for i in range(length):
+            ret = self.crc_1byte(ret ^ data[i])
+        return ret
+
 
     # 底盘数据监听（裸串口方式） Communication Timer callback to handle receive data. depend on communication protocol
     def subSerialCommunication(self, event):
@@ -495,89 +549,35 @@ class BaseControl:
         except:
             rospy.logerr("Get info Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
-    """
 
-    # 定频获取速度和imu信息，转换后发布里程计数据 Odom Timer call this to get velocity and imu info and convert to odom topic
-    def pubOdom(self, event):
-        """
-        # Get move base velocity data
-        if self.movebase_firmware_version[1] == 0:
-            # old version firmware have no version info and not support new command below
-            output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x09) + chr(0x00) + chr(0x38)  # 0x38 is CRC-8 value
-        else:
-            # in firmware version new than v1.1.0,support this command
-            output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x11) + chr(0x00) + chr(0xa2)
-        while(self.serialIDLE_flag):
+    # Subscribe ackermann Cmd call this to send vel cmd to move base
+    def ackermannCmdCB(self, data):
+        self.speed = data.drive.speed
+        self.steering_angle = data.drive.steering_angle
+        self.last_ackermann_cmd_time = rospy.Time.now()
+        output = chr(0x5a) + chr(12) + chr(0x01) + chr(0x15) + \
+            chr((int(self.speed*1000.0) >> 8) & 0xff) + chr(int(self.speed*1000.0) & 0xff) + \
+            chr(0x00) + chr(0x00) + \
+            chr((int(self.steering_angle*1000.0) >> 8) & 0xff) + chr(int(self.steering_angle*1000.0) & 0xff) + \
+            chr(0x00)
+        outputdata = [0x5a, 0x0c, 0x01, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        outputdata[4] = (int(self.speed*1000.0) >> 8) & 0xff
+        outputdata[5] = int(self.speed*1000.0) & 0xff
+        outputdata[8] = (int(self.steering_angle*1000.0) >> 8) & 0xff
+        outputdata[9] = int(self.steering_angle*1000.0) & 0xff
+        crc_8 = self.crc_byte(outputdata, len(outputdata)-1)
+        output += chr(crc_8)
+        while self.serialIDLE_flag:
             time.sleep(0.01)
-        self.serialIDLE_flag = 1
+        self.serialIDLE_flag = 4
         try:
             while self.serial.out_waiting:
                 pass
             self.serial.write(output)
         except:
-            rospy.logerr("Odom Command Send Faild! output: " + output)
+            rospy.logerr("ackermann Vel Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
-        """
-        # calculate odom data
-        Vx = float(ctypes.c_int16(self.Vx).value/1000.0)
-        Vy = float(ctypes.c_int16(self.Vy).value/1000.0)
-        Vyaw = float(ctypes.c_int16(self.Vyaw).value/1000.0)
 
-        self.pose_yaw = float(ctypes.c_int16(self.Yawz).value/100.0)
-        self.pose_yaw = self.pose_yaw*math.pi/180.0
-
-        self.current_time = rospy.Time.now()
-        dt = (self.current_time - self.previous_time).to_sec()
-        self.previous_time = self.current_time
-        self.pose_x = self.pose_x + Vx * \
-            (math.cos(self.pose_yaw))*dt - Vy * (math.sin(self.pose_yaw))*dt
-        self.pose_y = self.pose_y + Vx * \
-            (math.sin(self.pose_yaw))*dt + Vy * (math.cos(self.pose_yaw))*dt
-
-        pose_quat = tf.transformations.quaternion_from_euler(
-            0, 0, self.pose_yaw)
-        msg = Odometry()
-        msg.header.stamp = self.current_time
-        msg.header.frame_id = self.odomId
-        msg.child_frame_id = self.baseId
-        msg.pose.pose.position.x = self.pose_x
-        msg.pose.pose.position.y = self.pose_y
-        msg.pose.pose.position.z = 0
-        msg.pose.pose.orientation.x = pose_quat[0]
-        msg.pose.pose.orientation.y = pose_quat[1]
-        msg.pose.pose.orientation.z = pose_quat[2]
-        msg.pose.pose.orientation.w = pose_quat[3]
-        msg.twist.twist.linear.x = Vx
-        msg.twist.twist.linear.y = Vy
-        msg.twist.twist.angular.z = Vyaw
-        self.pub.publish(msg)
-        self.tf_broadcaster.sendTransform((self.pose_x, self.pose_y, 0.0), pose_quat, self.current_time, self.baseId, self.odomId)
-        rospy.loginfo("pub /odom data: " + str(msg))
-
-    # 定频发布电量数据 Battery Timer callback function to get battery info
-    def pubBattery(self, event):
-        """
-        output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x07) + chr(0x00) + chr(0xe4)  # 0xe4 is CRC-8 value
-        while(self.serialIDLE_flag):
-            time.sleep(0.01)
-        self.serialIDLE_flag = 3
-        try:
-            while self.serial.out_waiting:
-                pass
-            self.serial.write(output)
-        except:
-            rospy.logerr("Battery Command Send Faild! output: " + output)
-        self.serialIDLE_flag = 0
-        """
-        msg = BatteryState()
-        msg.header.stamp = self.current_time
-        msg.header.frame_id = self.baseId
-        msg.voltage = float(self.Vvoltage/1000.0)
-        msg.current = float(self.Icurrent/1000.0)
-        self.battery_pub.publish(msg)
-        rospy.loginfo("pub /battery data: " + str(msg))
-
-    """
     # Sonar Timer callback function to get battery info
     def timerSonarCB(self, event):
         output = chr(0x5a) + chr(0x06) + chr(0x01) + chr(0x19) + \
