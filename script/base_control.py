@@ -93,7 +93,7 @@ class BaseControl:
         self.baudrate = int(rospy.get_param('~baudrate', '57600'))
         self.odom_freq = int(rospy.get_param('~odom_freq', '50'))
         self.odom_topic = rospy.get_param('~odom_topic', '/odom')
-        self.battery_topic = rospy.get_param('~battery_topic', 'battery')
+        self.battery_topic = rospy.get_param('~battery_topic', '/battery')
         self.battery_freq = float(rospy.get_param('~battery_freq', '1'))
         self.cmd_vel_topic = rospy.get_param('~cmd_vel_topic', '/cmd_vel')
 
@@ -176,7 +176,7 @@ class BaseControl:
         rospy.loginfo("Serial Open Succeed")
         # 底盘数据监听（裸串口方式）
         #self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunication)
-        self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunicationTest)
+        #self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerial)
         
 
         # if move base type is ackermann car like robot and use ackermann msg ,sud ackermann topic,else sub cmd_vel topic
@@ -189,7 +189,7 @@ class BaseControl:
         
         self.tf_broadcaster = tf.TransformBroadcaster()
         # test rospy sub
-        self.sub = rospy.Subscriber("/tank/data", String, self.subTankData, queue_size=10)
+        #self.sub = rospy.Subscriber("/tank/data", String, self.subTankData, queue_size=10)
         # 监听move_base发布给底盘的移动命令，并发送给底盘串口执行
         self.sub = rospy.Subscriber(self.cmd_vel_topic, Twist, self.subCmd, queue_size=20)
         # 定频发布里程计数据
@@ -233,14 +233,14 @@ class BaseControl:
         rospy.loginfo("sub /tank/data data: " + str(data))
 
     # 底盘数据监听（裸串口方式）
-    def subSerialCommunicationTest(self, event):
+    def subSerial(self, event):
         length = self.serial.in_waiting
         if length:
             reading = self.serial.read_all()
             if len(reading) != 0:
                 #for i in range(0, len(reading)):
                 #    data = (int(reading[i].encode('hex'), 16))
-                rospy.loginfo("get timerCommunication info:" + str(reading))
+                rospy.loginfo("get serial data:" + str(reading))
         else:
             #rospy.loginfo("timerCommunication is Empty!")
             pass
@@ -265,12 +265,14 @@ class BaseControl:
             ret = self.crc_1byte(ret ^ data[i])
         return ret
 
-    # 监听move_base发布给底盘的vel_cmd移动命令，并发送给底盘串口  Subscribe vel_cmd call this to send vel cmd to move base
+    # 监听move_base发布给底盘的vel_cmd移动命令，并发送给底盘串口(也可以底盘直接监听vel_cmd topic)  Subscribe vel_cmd call this to send vel cmd to move base
     def subCmd(self, data):
         self.trans_x = data.linear.x
         self.trans_y = data.linear.y
         self.rotat_z = data.angular.z
         self.last_cmd_vel_time = rospy.Time.now()
+        rospy.loginfo("get cmd data:" + str(data))
+        """
         output = chr(0x5a) + chr(12) + chr(0x01) + chr(0x01) + \
             chr((int(self.trans_x*1000.0) >> 8) & 0xff) + chr(int(self.trans_x*1000.0) & 0xff) + \
             chr((int(self.trans_y*1000.0) >> 8) & 0xff) + chr(int(self.trans_y*1000.0) & 0xff) + \
@@ -295,6 +297,7 @@ class BaseControl:
         except:
             rospy.logerr("Vel_cmd Command Send Faild! output: " + output)
         self.serialIDLE_flag = 0
+        """
 
     """
     # Subscribe ackermann Cmd call this to send vel cmd to move base
@@ -549,6 +552,7 @@ class BaseControl:
         msg.twist.twist.angular.z = Vyaw
         self.pub.publish(msg)
         self.tf_broadcaster.sendTransform((self.pose_x, self.pose_y, 0.0), pose_quat, self.current_time, self.baseId, self.odomId)
+        rospy.loginfo("pub /odom data: " + str(msg))
 
     # 定频发布电量数据 Battery Timer callback function to get battery info
     def pubBattery(self, event):
@@ -571,6 +575,7 @@ class BaseControl:
         msg.voltage = float(self.Vvoltage/1000.0)
         msg.current = float(self.Icurrent/1000.0)
         self.battery_pub.publish(msg)
+        rospy.loginfo("pub /battery data: " + str(msg))
 
     """
     # Sonar Timer callback function to get battery info
