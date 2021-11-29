@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# coding=gbk
+# coding=utf-8
 
 # Copyright 2019 Wechange Tech.
 # Developer: FuZhi, Liu (liu.fuzhi@wechangetech.com)
@@ -185,7 +185,7 @@ class BaseControl:
 
     # test sub cmd
     def subTankCmd(self, data):
-        rospy.logerr("get /tank/cmd data! output: " + data)
+        rospy.loginfo("sub /tank/cmd data: " + data)
 
     # test pub odom
     def timerPubOdom(self, event):
@@ -224,6 +224,7 @@ class BaseControl:
         self.pub.publish(msg)
         self.tf_broadcaster.sendTransform(
             (self.pose_x, self.pose_y, 0.0), pose_quat, self.current_time, self.baseId, self.odomId)
+        rospy.loginfo("pub /odom data: " + str(msg))
 
 
 

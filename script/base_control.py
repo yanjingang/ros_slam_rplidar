@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# coding=gbk
+# coding=utf-8
 
 # Copyright 2019 Wechange Tech.
 # Developer: FuZhi, Liu (liu.fuzhi@wechangetech.com)
