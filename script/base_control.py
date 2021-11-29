@@ -175,8 +175,8 @@ class BaseControl:
             sys.exit(0)
         rospy.loginfo("Serial Open Succeed")
         # 底盘数据监听（裸串口方式）
-        #self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunicationTest)
-        self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunication)
+        #self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunication)
+        self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.subSerialCommunicationTest)
         
 
         # if move base type is ackermann car like robot and use ackermann msg ,sud ackermann topic,else sub cmd_vel topic
