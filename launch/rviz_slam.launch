@@ -2,5 +2,5 @@
   show slam in rviz
  -->
 <launch>
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ros_navigation)/rviz/slam.rviz" />
+    <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(find ros_navigation)/rviz/slam.rviz" />
 </launch>
