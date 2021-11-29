@@ -151,10 +151,12 @@ class BaseControl:
 
         self.tf_broadcaster = tf.TransformBroadcaster()
         # test sub
-        self.sub = rospy.Subscriber("/tank/cmd", Twist, self.subTankCmd, queue_size=20)
+        self.sub = rospy.Subscriber("/tank/data", Twist, self.subTankCmd, queue_size=10)
         # test pub
-        self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)
-        self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.timerPubOdom)
+        #self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)
+        #self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.timerPubOdom)
+        # test serial
+        self.timer_communication = rospy.Timer(rospy.Duration(1.0/500), self.timerCommunication)
 
 
         """
@@ -227,6 +229,20 @@ class BaseControl:
         rospy.loginfo("pub /odom data: " + str(msg))
 
 
+    # 通信计时器回调 Communication Timer callback to handle receive data
+    # depend on communication protocol
+    def timerCommunication(self, event):
+        length = self.serial.in_waiting
+        if length:
+            reading = self.serial.read_all()
+            if len(reading) != 0:
+                for i in range(0, len(reading)):
+                    data = (int(reading[i].encode('hex'), 16))
+                    rospy.loginfo("get timerCommunication info:" + data)
+        else:
+            rospy.loginfo("timerCommunication is Empty!")
+            pass
+        
 
 
 
