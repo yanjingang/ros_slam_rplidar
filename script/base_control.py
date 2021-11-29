@@ -88,8 +88,8 @@ class BaseControl:
         # Get params
         self.baseId = rospy.get_param('~base_id', 'base_footprint')
         self.odomId = rospy.get_param('~odom_id', 'odom')
-        self.device_port = rospy.get_param('~port', '/dev/ttyUSB0')
-        self.baudrate = int(rospy.get_param('~baudrate', '115200'))
+        self.device_port = rospy.get_param('~port', '/dev/ttyACM0')
+        self.baudrate = int(rospy.get_param('~baudrate', '57600'))
         self.odom_freq = int(rospy.get_param('~odom_freq', '50'))
         self.odom_topic = rospy.get_param('~odom_topic', '/odom')
         self.battery_topic = rospy.get_param('~battery_topic', 'battery')
