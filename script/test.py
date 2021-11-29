@@ -153,16 +153,16 @@ class BaseControl:
         """
         rospy.loginfo("Connecting to %s at %d ..." % (self.device_port, self.baudrate) )
         try:
-            client = SerialClient(self.device_port, self.baudrate, fix_pyserial_for_test=fix_pyserial_for_test)
+            client = SerialClient(self.device_port, self.baudrate, fix_pyserial_for_test=False)
             client.run()
         except KeyboardInterrupt:
             rospy.logerr("Opening Serial Try Faild")
             sys.exit(0)
         except SerialException:
-            rospy.logerr("Can not open Serial"+self.device_port)
+            rospy.logerr("Can not open Serial {} {}".format(self.device_port, self.baudrate))
             sys.exit(0)
         except OSError:
-            rospy.logerr("Can not open Serial"+self.device_port)
+            rospy.logerr("Can not open Serial {} {}".format(self.device_port, self.baudrate))
             sys.exit(0)
         rospy.loginfo("Connected to %s at %d !" % (self.device_port,self.baudrate) )
         rospy.loginfo("Serial Open Succeed")
