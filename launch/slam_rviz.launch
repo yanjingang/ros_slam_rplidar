@@ -2,10 +2,9 @@
   show slam in rviz
  -->
 <launch>
-  <!--include file="$(find rplidar_ros)/launch/rplidar.launch" /-->
-  <!--include file="$(find rplidar_ros)/launch/hector.launch" /-->
-  <!--include file="$(find rplidar_ros)/launch/gmapping.launch" /-->
-  <!--include file="$(find rplidar_ros)/launch/karto.launch" /-->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find rplidar_ros)/rviz/slam.rviz" />
+  <!--include file="$(find ros_navigation)/launch/rplidar.launch" /-->
+  <!--include file="$(find ros_navigation)/launch/hector.launch" /-->
+  <!--include file="$(find ros_navigation)/launch/gmapping.launch" /-->
+  <!--include file="$(find ros_navigation)/launch/karto.launch" /-->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ros_navigation)/rviz/slam.rviz" />
 </launch>
-
