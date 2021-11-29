@@ -28,6 +28,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import Range
+from std_msgs.msg import String
 
 import ctypes
 

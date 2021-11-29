@@ -28,6 +28,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import BatteryState
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import Range
+from std_msgs.msg import String
 
 import ctypes
 
@@ -151,7 +152,7 @@ class BaseControl:
 
         self.tf_broadcaster = tf.TransformBroadcaster()
         # test sub
-        self.sub = rospy.Subscriber("/tank/data", Twist, self.subTankCmd, queue_size=10)
+        self.sub = rospy.Subscriber("/tank/data", String, self.subTankCmd, queue_size=10)
         # test pub
         #self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)
         #self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.timerPubOdom)
