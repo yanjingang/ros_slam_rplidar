@@ -162,10 +162,12 @@ class BaseControl:
         rospy.loginfo("Serial Open Succeed")
 
         # if move base type is ackermann car like robot and use ackermann msg ,sud ackermann topic,else sub cmd_vel topic
-        """if(('NanoCar' in base_type) & (self.sub_ackermann == True)):
+        """
+        if(('NanoCar' in base_type) & (self.sub_ackermann == True)):
             from ackermann_msgs.msg import AckermannDriveStamped
             self.sub = rospy.Subscriber(self.ackermann_cmd_topic, AckermannDriveStamped, self.ackermannCmdCB, queue_size=20)
-        else:"""
+        else:
+        """
         self.tf_broadcaster = tf.TransformBroadcaster()
         # 监听move_base发布给底盘的移动命令，并发送给底盘串口执行
         self.sub = rospy.Subscriber(self.cmd_vel_topic, Twist, self.cmdCB, queue_size=20)
@@ -173,7 +175,8 @@ class BaseControl:
         self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=10)
         # 电量数据发布对象
         self.battery_pub = rospy.Publisher(self.battery_topic, BatteryState, queue_size=3)
-        """if self.pub_sonar:
+        """
+        if self.pub_sonar:
             if sonar_num > 0:
                 self.timer_sonar = rospy.Timer(rospy.Duration(100.0/1000), self.timerSonarCB)
                 self.range_pub1 = rospy.Publisher('sonar_1', Range, queue_size=3)
@@ -182,7 +185,8 @@ class BaseControl:
             if sonar_num > 2:
                 self.range_pub3 = rospy.Publisher('sonar_3', Range, queue_size=3)
             if sonar_num > 3:
-                self.range_pub4 = rospy.Publisher('sonar_4', Range, queue_size=3)"""
+                self.range_pub4 = rospy.Publisher('sonar_4', Range, queue_size=3)
+        """
         # 定频发布里程计数据
         self.timer_odom = rospy.Timer(rospy.Duration(1.0/self.odom_freq), self.timerOdomCB)
         # 定频发布电量数据
