@@ -153,7 +153,7 @@ class BaseControl:
                 if self.serial.in_waiting:
                     self.serial.readall()
             except:
-                rospy.loginfo("Opening Serial Try Faild")
+                rospy.logerr("Opening Serial Try Faild")
                 pass
         except:
             rospy.logerr("Can not open Serial"+self.device_port)

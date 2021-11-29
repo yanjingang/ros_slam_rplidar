@@ -134,6 +134,7 @@ class BaseControl:
         self.last_ackermann_cmd_time = rospy.Time.now()
 
         # 连接底盘serial串口 Serial Communication
+        """
         try:
             self.serial = serial.Serial(self.device_port, self.baudrate, timeout=10)
             rospy.loginfo("Opening Serial")
@@ -141,12 +142,27 @@ class BaseControl:
                 if self.serial.in_waiting:
                     self.serial.readall()
             except:
-                rospy.loginfo("Opening Serial Try Faild")
+                rospy.logerr("Opening Serial Try Faild")
                 pass
         except:
             rospy.logerr("Can not open Serial"+self.device_port)
             self.serial.close
             sys.exit(0)
+        """
+        rospy.loginfo("Connecting to %s at %d ..." % (self.device_port, self.baudrate) )
+        try:
+            client = serial.SerialClient(self.device_port, self.baudrate, fix_pyserial_for_test=fix_pyserial_for_test)
+            client.run()
+        except KeyboardInterrupt:
+            rospy.logerr("Opening Serial Try Faild")
+            sys.exit(0)
+        except serial.SerialException:
+            rospy.logerr("Can not open Serial"+self.device_port)
+            sys.exit(0)
+        except OSError:
+            rospy.logerr("Can not open Serial"+self.device_port)
+            sys.exit(0)
+        rospy.loginfo("Connected to %s at %d !" % (self.device_port,self.baudrate) )
         rospy.loginfo("Serial Open Succeed")
 
 

@@ -84,7 +84,7 @@ if __name__=="__main__":
     else :"""
     # Use serial port
     while not rospy.is_shutdown():
-        rospy.loginfo("Connecting to %s at %d baud" % (port_name,baud) )
+        rospy.loginfo("Connecting to %s at %d baud..." % (port_name,baud) )
         try:
             client = SerialClient(port_name, baud, fix_pyserial_for_test=fix_pyserial_for_test)
             client.run()
@@ -96,3 +96,4 @@ if __name__=="__main__":
         except OSError:
             sleep(1.0)
             continue
+        rospy.loginfo("Connected to %s at %d baud!" % (port_name,baud) )
