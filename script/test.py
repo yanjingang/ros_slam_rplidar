@@ -188,7 +188,7 @@ class BaseControl:
 
     # test sub cmd
     def subTankCmd(self, data):
-        rospy.loginfo("sub /tank/cmd data: " + data)
+        rospy.loginfo("sub /tank/cmd data: " + str(data))
 
     # test pub odom
     def timerPubOdom(self, event):
@@ -239,7 +239,7 @@ class BaseControl:
             if len(reading) != 0:
                 for i in range(0, len(reading)):
                     data = (int(reading[i].encode('hex'), 16))
-                    rospy.loginfo("get timerCommunication info:" + data)
+                    rospy.loginfo("get timerCommunication info:" + str(data))
         else:
             #rospy.loginfo("timerCommunication is Empty!")
             pass
